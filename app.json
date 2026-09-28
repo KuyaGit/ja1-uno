@@ -8,7 +8,13 @@
     "scheme": "ja1uno",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "UNO Local uses your local WiFi network to connect players for LAN multiplayer games.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +38,25 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-audio",
+      "expo-sqlite",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "UNO Local uses the camera to scan a host's join QR code.",
+          "barcodeScannerEnabled": true
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
