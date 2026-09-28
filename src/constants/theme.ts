@@ -26,6 +26,25 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/** UNO card face colors, shared across light/dark mode (cards always render on a dark felt table). */
+export const CardColors = {
+  RED: '#E8433A',
+  BLUE: '#1F6FE0',
+  GREEN: '#2AA34A',
+  YELLOW: '#F2B705',
+} as const;
+
+/** Distinct accent used for Super Cards (holographic border + star badge). */
+export const SuperCardAccent = '#B76BFF';
+
+export const TableColors = {
+  felt: '#0B3D2E',
+  feltDark: '#062219',
+  cardBack: '#141A2E',
+  cardFace: '#FDFBF7',
+  cardText: '#141414',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
