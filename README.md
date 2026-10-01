@@ -25,6 +25,10 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Android builds and releases
+
+Pushes to `main` publish a signed APK to the `latest-main` pre-release, and pushing a `v*` tag publishes a full GitHub Release. See [docs/CI_SETUP.md](docs/CI_SETUP.md) for the one-time setup.
+
 ## Get a fresh project
 
 When you're ready, run:

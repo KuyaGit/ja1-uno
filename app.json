@@ -17,6 +17,7 @@
       }
     },
     "android": {
+      "package": "com.kuyagit.ja1uno",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
