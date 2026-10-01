@@ -252,13 +252,15 @@ describe('full game reaches a win', () => {
       // someone else, since a self-targeting Skip/Reverse in a 2-player game keeps it the same
       // player's turn again immediately.
       const next = await actor.waitForNext((m) => m.type === 'STATE', 5000);
-      void nonActor;
-      if (next.type === 'STATE') latestView = next.view;
-
-      // The server broadcasts STATE to both sockets independently for the same action; give the
-      // *other* player's connection a moment to actually receive theirs too before the next
-      // iteration reads their cached hand (otherwise it may read a stale, pre-broadcast state).
-      await delay(15);
+      if (next.type === 'STATE') {
+        latestView = next.view;
+        // The server broadcasts STATE to both sockets independently for the same action. Wait
+        // until the *other* player's connection has received that same broadcast (matched by
+        // seq) before the next iteration reads their cached hand -- a fixed sleep is flaky on a
+        // loaded CI runner and leaves a stale hand, so the bot sends an invalid action and stalls.
+        const seq = next.seq;
+        await nonActor.waitFor((m) => m.type === 'STATE' && m.seq >= seq, 5000);
+      }
     }
 
     expect(latestView.status).toBe('ENDED');
