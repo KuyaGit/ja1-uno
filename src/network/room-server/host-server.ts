@@ -53,6 +53,7 @@ export class HostServer {
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private readonly hostId: string;
   private readonly hostSessionToken: string;
+  private stopped = false;
 
   constructor(options: HostServerOptions) {
     this.hostId = options.hostId;
@@ -83,13 +84,10 @@ export class HostServer {
   }
 
   stop(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
-    for (const timer of this.turnTimers.values()) clearTimeout(timer);
-    this.turnTimers.clear();
-    for (const record of this.connections.values()) {
+    // Flag first: closing each connection fires handleDisconnect, which must not schedule new
+    // turn timers (or broadcast) for a room that is going away.
+    this.stopped = true;
+    for (const record of Array.from(this.connections.values())) {
       try {
         record.conn.close(1001, 'Host closed the room');
       } catch {
@@ -97,6 +95,12 @@ export class HostServer {
       }
     }
     this.connections.clear();
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    for (const timer of this.turnTimers.values()) clearTimeout(timer);
+    this.turnTimers.clear();
   }
 
   private handleConnection(conn: WSConnection): void {
@@ -213,7 +217,7 @@ export class HostServer {
 
   private handleDisconnect(record: ConnectionRecord): void {
     this.connections.delete(record.conn);
-    if (!record.playerId) return;
+    if (this.stopped || !record.playerId) return;
     if (!this.state.players.find((p) => p.id === record.playerId && !p.removed)) return;
     this.applyConnectionStatus(record.playerId, false);
     this.rescheduleTurnTimer();
@@ -230,6 +234,7 @@ export class HostServer {
 
   /** Ensures exactly one pending SKIP_TURN_TIMEOUT is scheduled for a disconnected current player. */
   private rescheduleTurnTimer(): void {
+    if (this.stopped) return;
     for (const [playerId, timer] of this.turnTimers) {
       if (playerId !== this.state.currentPlayerId) {
         clearTimeout(timer);
@@ -258,6 +263,7 @@ export class HostServer {
 
   private autoSkipTurn(playerId: string): void {
     this.turnTimers.delete(playerId);
+    if (this.stopped) return;
     if (this.state.currentPlayerId !== playerId || this.state.status !== 'PLAYING') return;
     const result = applyAction(this.state, this.hostId, { type: 'SKIP_TURN_TIMEOUT', playerId }, this.rng);
     if (result.ok) {
